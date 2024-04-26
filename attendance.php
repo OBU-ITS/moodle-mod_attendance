@@ -29,10 +29,32 @@ require_once($CFG->libdir.'/formslib.php');
 $pageparams = new mod_attendance_sessions_page_params();
 
 // Check that the required parameters are present.
-$id = required_param('sessid', PARAM_INT);
+$id = required_param('sessid', PARAM_TEXT);
 $qrpass = optional_param('qrpass', '', PARAM_TEXT);
 
-$attforsession = $DB->get_record('attendance_sessions', array('id' => $id), '*', MUST_EXIST);
+$attforsession = null;
+$attforsessions = $DB->get_records('attendance_sessions', array('rotateqrcodesecret' => $id), null);
+
+if(!$attforsessions) {
+    $attforsession = $DB->get_record('attendance_sessions', array('id' => $id), '*', MUST_EXIST);
+}
+else if(count($attforsessions) > 1) {
+    $attforsession = reset($attforsessions); // TODO : filter by enrolemnt on course
+
+    /* TODO
+        1. If student is enrolled on the course
+            a. If one session - YAY
+            b. If multiple sessions then filter by group
+    */
+}
+else {
+    $attforsession = reset($attforsessions);
+}
+
+if (empty($attforsession)) {
+    throw new moodle_exception('nomatchingsessions', 'attendance');
+}
+
 $attconfig = get_config('attendance');
 $attendance = $DB->get_record('attendance', array('id' => $attforsession->attendanceid), '*', MUST_EXIST);
 $cm = get_coursemodule_from_instance('attendance', $attendance->id, 0, false, MUST_EXIST);

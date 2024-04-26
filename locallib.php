@@ -1387,11 +1387,14 @@ function construct_session_full_date_time($datetime, $duration) {
 function attendance_renderqrcode($session) {
     global $CFG;
 
+    $hasencode = !$session->rotateqrcode && strlen($session->rotateqrcodesecret) > 0;
+    $sessionid = $hasencode ? $session->rotateqrcodesecret : $session->id;
+
     if (strlen($session->studentpassword) > 0) {
         $qrcodeurl = $CFG->wwwroot . '/mod/attendance/attendance.php?qrpass=' .
-            $session->studentpassword . '&sessid=' . $session->id;
+            $session->studentpassword . '&sessid=' . $sessionid;
     } else {
-        $qrcodeurl = $CFG->wwwroot . '/mod/attendance/attendance.php?sessid=' . $session->id;
+        $qrcodeurl = $CFG->wwwroot . '/mod/attendance/attendance.php?sessid=' . $sessionid;
     }
 
     $barcode = new TCPDF2DBarcode($qrcodeurl, 'QRCODE');

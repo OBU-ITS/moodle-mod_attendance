@@ -680,3 +680,6 @@ $string['customfields'] = 'Custom session fields';
 $string['manualtriggerauto'] = 'Manually trigger automatic marking';
 $string['updateattendance'] = 'Update attendance';
 $string['userexistingstatus'] = 'Your attendance has already been marked as: <strong>{$a}</strong>, use the form below to change this if required.';
+
+/* OBU Additional Lang */
+$string['nomatchingsessions'] = 'No attendance sessions have been found for you.';
