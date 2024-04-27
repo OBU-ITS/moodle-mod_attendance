@@ -39,13 +39,24 @@ if(!$attforsessions) {
     $attforsession = $DB->get_record('attendance_sessions', array('id' => $id), '*', MUST_EXIST);
 }
 else if(count($attforsessions) > 1) {
-    $attforsession = reset($attforsessions); // TODO : filter by enrolemnt on course
+    $attforsessionids = array_column($attforsessions, 'id');
+    list($sessionidsquery, $params) = $DB->get_in_or_equal($attforsessionids, SQL_PARAMS_NAMED);
+    $sql = "SELECT * from {attendance_sessions} s 
+            INNER JOIN {attendance} a ON a.id = s.attendanceid
+            INNER JOIN {course} c ON c.id = a.course
+            INNER JOIN {enrol} e ON e.courseid = c.id
+            INNER JOIN {user_enrolments} ue ON ue.enrolid = e.id
+            WHERE ue.userid = :userid AND s.id $sessionidsquery";
+    $params['userid'] = $USER->id;
 
-    /* TODO
-        1. If student is enrolled on the course
-            a. If one session - YAY
-            b. If multiple sessions then filter by group
-    */
+    $attforsessions = $DB->get_records_sql($sql, $params);
+
+    if(count($attforsessions) > 1) {
+        $attforsession = reset($attforsessions); // Filter by Groups
+    }
+    else {
+        $attforsession = reset($attforsessions);
+    }
 }
 else {
     $attforsession = reset($attforsessions);

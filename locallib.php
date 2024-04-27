@@ -1399,7 +1399,7 @@ function attendance_renderqrcode($session) {
 
     $barcode = new TCPDF2DBarcode($qrcodeurl, 'QRCODE');
     $image = $barcode->getBarcodePngData(15, 15);
-    echo html_writer::img('data:image/png;base64,' . base64_encode($image), get_string('qrcode', 'attendance'));
+    echo html_writer::img('data:image/png;base64,' . base64_encode($image), get_string('qrcode', 'attendance'), array("title" => $qrcodeurl));
 }
 
 /**
