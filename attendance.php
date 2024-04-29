@@ -39,24 +39,21 @@ if(!$attforsessions) {
     $attforsession = $DB->get_record('attendance_sessions', array('id' => $id), '*', MUST_EXIST);
 }
 else if(count($attforsessions) > 1) {
-    $attforsessionids = array_column($attforsessions, 'id');
-    list($sessionidsquery, $params) = $DB->get_in_or_equal($attforsessionids, SQL_PARAMS_NAMED);
-    $sql = "SELECT * from {attendance_sessions} s 
+    $sql = "SELECT s.*
+            FROM {attendance_sessions} s 
             INNER JOIN {attendance} a ON a.id = s.attendanceid
             INNER JOIN {course} c ON c.id = a.course
             INNER JOIN {enrol} e ON e.courseid = c.id
             INNER JOIN {user_enrolments} ue ON ue.enrolid = e.id
-            WHERE ue.userid = :userid AND s.id $sessionidsquery";
-    $params['userid'] = $USER->id;
+            WHERE s.groupid = 0 AND ue.userid = ? AND s.rotateqrcodesecret = ?
+            UNION
+            SELECT s.*
+            FROM {attendance_sessions} s 
+            INNER JOIN {groups_members} m ON m.groupid = s.groupid
+            WHERE s.groupid > 0 AND m.userid = ? AND s.rotateqrcodesecret = ?";
 
-    $attforsessions = $DB->get_records_sql($sql, $params);
-
-    if(count($attforsessions) > 1) {
-        $attforsession = reset($attforsessions); // Filter by Groups
-    }
-    else {
-        $attforsession = reset($attforsessions);
-    }
+    $attforsessions = $DB->get_records_sql($sql, [$USER->id, $id, $USER->id, $id]);
+    $attforsession = reset($attforsessions);
 }
 else {
     $attforsession = reset($attforsessions);
@@ -65,6 +62,8 @@ else {
 if (empty($attforsession)) {
     throw new moodle_exception('nomatchingsessions', 'attendance');
 }
+
+$id = $attforsession->id;
 
 $attconfig = get_config('attendance');
 $attendance = $DB->get_record('attendance', array('id' => $attforsession->attendanceid), '*', MUST_EXIST);
