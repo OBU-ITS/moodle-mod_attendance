@@ -1387,8 +1387,9 @@ function construct_session_full_date_time($datetime, $duration) {
 function attendance_renderqrcode($session) {
     global $CFG;
 
-    $hasencode = !$session->rotateqrcode && strlen($session->rotateqrcodesecret) > 0;
-    $sessionid = $hasencode ? $session->rotateqrcodesecret : $session->id;
+    $sessionid = strlen($session->sessioninstancecode) > 0
+        ? $session->sessioninstancecode
+        : $session->id;
 
     if (strlen($session->studentpassword) > 0) {
         $qrcodeurl = $CFG->wwwroot . '/mod/attendance/attendance.php?qrpass=' .
@@ -1461,4 +1462,51 @@ function attendance_return_passwords($session) {
 
     $sql = 'SELECT * FROM {attendance_rotate_passwords} WHERE attendanceid = ? AND expirytime > ? ORDER BY expirytime ASC';
     return json_encode($DB->get_records_sql($sql, ['attendanceid' => $session->id, time()], $strictness = IGNORE_MISSING));
+}
+
+/**
+ * OBU Customisation
+ *
+ * Get attendance session by encoded session
+ *
+ * @param string $session_id
+ * @param object $user
+ */
+function attendance_get_session_by_encoding($session_id, $user) {
+    if(strlen($session_id) == 0 || !$user) {
+        return null;
+    }
+
+    global $DB;
+
+    $attforsessions = $DB->get_records('attendance_sessions', array('rotateqrcodesecret' => $session_id), null);
+
+    if(!$attforsessions) {
+        return $DB->get_record('attendance_sessions', array('id' => $session_id), '*', MUST_EXIST);
+    }
+
+    if(count($attforsessions) == 1) {
+        return reset($attforsessions);
+    }
+
+    $sql = "SELECT s.*
+            FROM {attendance_sessions} s 
+            INNER JOIN {attendance} a ON a.id = s.attendanceid
+            INNER JOIN {course} c ON c.id = a.course
+            INNER JOIN {enrol} e ON e.courseid = c.id
+            INNER JOIN {user_enrolments} ue ON ue.enrolid = e.id
+            WHERE s.groupid = 0 AND ue.userid = :userid AND s.rotateqrcodesecret = :endcoding
+            UNION
+            SELECT s.*
+            FROM {attendance_sessions} s 
+            INNER JOIN {groups_members} m ON m.groupid = s.groupid
+            WHERE s.groupid > 0 AND m.userid = :userid AND s.rotateqrcodesecret = :endcoding";
+
+    $params = array();
+    $params['userid'] = $user->id;
+    $params['endcoding'] = $session_id;
+
+    $attforsessions = $DB->get_records_sql($sql, $params);
+    return reset($attforsessions);
+
 }

@@ -806,5 +806,27 @@ function xmldb_attendance_upgrade($oldversion=0) {
         upgrade_mod_savepoint(true, 2023020106, 'attendance');
     }
 
+    if ($oldversion < 2023020108) {
+        $table = new xmldb_table('attendance_sessions');
+
+        $field = new xmldb_field('roomid', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, '', 'automarkcmid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('timetableeventid', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, '', 'roomid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('sessioninstancecode', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, '', 'timetableeventid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Attendance savepoint reached.
+        upgrade_mod_savepoint(true, 2023020108, 'attendance');
+    }
+
     return true;
 }

@@ -29,36 +29,10 @@ require_once($CFG->libdir.'/formslib.php');
 $pageparams = new mod_attendance_sessions_page_params();
 
 // Check that the required parameters are present.
-$id = required_param('sessid', PARAM_TEXT);
+$sessid = required_param('sessid', PARAM_TEXT);
 $qrpass = optional_param('qrpass', '', PARAM_TEXT);
 
-$attforsession = null;
-$attforsessions = $DB->get_records('attendance_sessions', array('rotateqrcodesecret' => $id), null);
-
-if(!$attforsessions) {
-    $attforsession = $DB->get_record('attendance_sessions', array('id' => $id), '*', MUST_EXIST);
-}
-else if(count($attforsessions) > 1) {
-    $sql = "SELECT s.*
-            FROM {attendance_sessions} s 
-            INNER JOIN {attendance} a ON a.id = s.attendanceid
-            INNER JOIN {course} c ON c.id = a.course
-            INNER JOIN {enrol} e ON e.courseid = c.id
-            INNER JOIN {user_enrolments} ue ON ue.enrolid = e.id
-            WHERE s.groupid = 0 AND ue.userid = ? AND s.rotateqrcodesecret = ?
-            UNION
-            SELECT s.*
-            FROM {attendance_sessions} s 
-            INNER JOIN {groups_members} m ON m.groupid = s.groupid
-            WHERE s.groupid > 0 AND m.userid = ? AND s.rotateqrcodesecret = ?";
-
-    $attforsessions = $DB->get_records_sql($sql, [$USER->id, $id, $USER->id, $id]);
-    $attforsession = reset($attforsessions);
-}
-else {
-    $attforsession = reset($attforsessions);
-}
-
+$attforsession = attendance_get_session_by_encoding($sessid, $USER);
 if (empty($attforsession)) {
     throw new moodle_exception('nomatchingsessions', 'attendance');
 }

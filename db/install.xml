@@ -55,6 +55,9 @@
         <FIELD NAME="rotateqrcode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="rotateqrcodesecret" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="automarkcmid" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="roomid" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Identifier for the room hosting the session"/>
+        <FIELD NAME="timetableeventid" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Timetabling session identifier"/>
+        <FIELD NAME="sessioninstancecode" TYPE="char" LENGTH="62" NOTNULL="false" SEQUENCE="false" COMMENT="Encoded session instance"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for attendance_sessions"/>
