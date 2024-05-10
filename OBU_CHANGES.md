@@ -123,6 +123,20 @@ if (empty($attforsession)) {
 $id = $attforsession->id;
 ```
 
+## classes/output/renderer.php
+### construct_date_time_actions (line ~448)
+
+Make sure deletion of sessions (with CMIS ID) can only be done by site admins
+
+``` php 
+if(strlen($sess->timetableeventid) == 0 || is_siteadmin()) {
+    $url = $sessdata->url_sessions($sess->id, mod_attendance_sessions_page_params::ACTION_DELETE);
+    $title = get_string('deletesession', 'attendance');
+    $actions .= $this->output->action_icon($url, new pix_icon('t/delete', $title));
+}
+```
+
+
 ## lang/en/attendance.php
 ### main (line ~685)
 

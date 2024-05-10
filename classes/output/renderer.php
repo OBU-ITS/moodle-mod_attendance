@@ -445,9 +445,11 @@ class renderer extends plugin_renderer_base {
             $title = get_string('editsession', 'attendance');
             $actions .= $this->output->action_icon($url, new pix_icon('t/edit', $title));
 
-            $url = $sessdata->url_sessions($sess->id, mod_attendance_sessions_page_params::ACTION_DELETE);
-            $title = get_string('deletesession', 'attendance');
-            $actions .= $this->output->action_icon($url, new pix_icon('t/delete', $title));
+            if(strlen($sess->timetableeventid) == 0 || is_siteadmin()) {
+                $url = $sessdata->url_sessions($sess->id, mod_attendance_sessions_page_params::ACTION_DELETE);
+                $title = get_string('deletesession', 'attendance');
+                $actions .= $this->output->action_icon($url, new pix_icon('t/delete', $title));
+            }
         }
 
         return array('date' => $date, 'time' => $time, 'actions' => $actions);

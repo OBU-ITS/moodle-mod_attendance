@@ -45,12 +45,13 @@ $cm = get_coursemodule_from_instance('attendance', $attendance->id, 0, false, MU
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
 // Require the user is logged in.
-require_login($course, true, $cm);
+//require_login($course, true, $cm);
+require_login();
 
 // If group mode is set, check if user can access this session.
-if (!empty($attforsession->groupid) && !groups_is_member($attforsession->groupid, $USER->id)) {
-    throw new moodle_exception('cannottakethisgroup', 'attendance');
-}
+//if (!empty($attforsession->groupid) && !groups_is_member($attforsession->groupid, $USER->id)) {
+//    throw new moodle_exception('cannottakethisgroup', 'attendance');
+//}
 
 if ($DB->record_exists('attendance_log', ['sessionid' => $id, 'studentid' => $USER->id]) && !attendance_check_allow_update($id)) {
     $url = new moodle_url('/mod/attendance/view.php', ['id' => $cm->id]);
@@ -224,7 +225,7 @@ if ($mform->is_cancelled()) {
         }
         $success = $att->take_from_student($fromform);
 
-        $url = new moodle_url('/mod/attendance/view.php', array('id' => $cm->id));
+        $url = new moodle_url('/'); // new moodle_url('/mod/attendance/view.php', array('id' => $cm->id));
         if ($success) {
             // Redirect back to the view page.
             redirect($url, get_string('studentmarked', 'attendance'));
