@@ -34,6 +34,16 @@ if ($oldversion < 2023020108) {
     // Attendance savepoint reached.
     upgrade_mod_savepoint(true, 2023020108, 'attendance');
 }
+
+if ($oldversion < 2023020111) {
+    $table = new xmldb_table('attendance_sessions');
+    $field = new xmldb_field('roomid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '', 'automarkcmid');
+    if ($dbman->field_exists($table, $field)) {
+        $dbman->change_field_precision($table, $field);
+    }
+
+    upgrade_mod_savepoint(true, 2023020111, 'attendance');
+}
 ```
 
 ## locallib.php
