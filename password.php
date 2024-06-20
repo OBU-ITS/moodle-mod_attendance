@@ -165,6 +165,7 @@ if ($rotateqr) {
                     } else {
                         echo html_writer::div("<p>".get_string('passwordheader', 'attendance')."</p>", 'qrcodeheader');
                     }
+                    echo html_writer::div("<p>&nbsp;</p>");
                     echo html_writer::div("<h2>Password</h2>", 'student-password');
                     echo html_writer::div("<p>".$session->studentpassword."</p>", 'student-password');
                     echo html_writer::div('&nbsp;');
