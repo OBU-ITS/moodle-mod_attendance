@@ -44,6 +44,16 @@ if ($oldversion < 2023020111) {
 
     upgrade_mod_savepoint(true, 2023020111, 'attendance');
 }
+
+if ($oldversion < 2023061401) {
+    $table = new xmldb_table('attendance_sessions');
+    $field = new xmldb_field('roomid', XMLDB_TYPE_CHAR, '1023', null, XMLDB_NOTNULL, null, '', 'automarkcmid');
+    if ($dbman->field_exists($table, $field)) {
+        $dbman->change_field_precision($table, $field);
+    }
+
+    upgrade_mod_savepoint(true, 2023061401, 'attendance');
+}
 ```
 
 ## locallib.php
@@ -146,11 +156,147 @@ if(strlen($sess->timetableeventid) == 0 || is_siteadmin()) {
 }
 ```
 
+## password.php
+### main (line ~685)
+
+Replace the output of password.php file with the following
+
+``` php
+echo $OUTPUT->header();
+
+$showpassword = (isset($session->studentpassword) && strlen($session->studentpassword) > 0);
+$showqr = (isset($session->includeqrcode) && $session->includeqrcode == 1);
+$rotateqr = (isset($session->rotateqrcode) && $session->rotateqrcode == 1);
+if ($rotateqr) {
+    $showpassword = false;
+}
+?>
+    <style>
+        #page {
+            margin-top: 0;
+            border-top: solid 4px #d10373;
+        }
+        #page-content {
+            padding: 0 !important;
+        }
+        #region-main-box {
+            padding: 0;
+        }
+        .qr-container {
+            display: flex;
+            flex-wrap: wrap;
+            height: calc(100vh - 5px);
+            max-width:1366px;
+            margin: 0 auto;
+        }
+
+        .qr-left, .qr-right {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .qr-left {
+            flex: 1 1 50%;
+        }
+
+        .qr-right {
+            flex: 1 1 50%;
+            text-align: center;
+        }
+
+        .qr-left img {
+            max-width: calc(100% - 20px);
+            max-height: calc(100vh - 20px);
+            width: auto;
+            height: auto;
+        }
+
+        .logo {
+            max-width: 100px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.1em;
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .qr-container {
+                flex-direction: column;
+            }
+
+            .logo {
+                max-width: 50px;
+            }
+
+            .qr-left, .qr-right {
+                flex: unset;
+                width: 100%;
+            }
+
+            .qr-left img {
+                max-width: calc(100% - 20px); /* 10px padding on each side */
+                max-height: calc(50vh - 20px); /* 10px padding on top and bottom */
+                width: auto;
+                height: auto;
+            }
+        }
+    </style>
+    <div class="qr-container">
+        <div class="qr-left">
+            <?php
+            if ($rotateqr) {
+                echo html_writer::div(get_string('qrcodeheader', 'attendance'), 'qrcodeheader');
+                attendance_generate_passwords($session);
+                attendance_renderqrcoderotate($session);
+            } else if ($showqr) {
+                attendance_renderqrcode($session);
+            }
+            ?>
+        </div>
+        <div class="qr-right">
+            <div>
+                <img id="logoimage" src="https://moodle.brookes.ac.uk/pluginfile.php/1/core_admin/logo/0x200/1716274233/brookes_logo_dark-2x.png" class="img-fluid" alt="Brookes" />
+                <?php
+                if ($showpassword) {
+                    if ($showqr) {
+                        echo html_writer::div("<p>".get_string('qrcodeandpasswordheader', 'attendance')."</p>", 'qrcodeheader');
+                    } else {
+                        echo html_writer::div("<p>".get_string('passwordheader', 'attendance')."</p>", 'qrcodeheader');
+                    }
+                    echo html_writer::div("<h2>Password</h2>", 'student-password');
+                    echo html_writer::div("<p>".$session->studentpassword."</p>", 'student-password');
+                    echo html_writer::div('&nbsp;');
+                }
+                ?>
+            </div>
+        </div>
+    </div>
+
+<?php
+
+echo $OUTPUT->footer();
+```
+
 
 ## lang/en/attendance.php
 ### main (line ~685)
 
-All entries below /* OBU Additional Lang */
+Update the following language strings
+``` php
+$string['qrcodeheader'] = 'Scan the QR code to take your attendance';
+$string['qrcodeandpasswordheader'] = 'Scan the QR code or use the password listed below to take your attendance';
+```
+
+Add entries below /* OBU Additional Lang */
 
 ``` php
 /* OBU Additional Lang */
