@@ -54,6 +54,16 @@ if ($oldversion < 2023061401) {
 
     upgrade_mod_savepoint(true, 2023061401, 'attendance');
 }
+
+if ($oldversion < 2024090401) {
+    $table = new xmldb_table('attendance_sessions');
+    $field = new xmldb_field('sessioninstancecode', XMLDB_TYPE_CHAR, '62', null, XMLDB_NOTNULL, null, '', 'timetableeventid');
+    if ($dbman->field_exists($table, $field)) {
+        $dbman->change_field_precision($table, $field);
+    }
+
+    upgrade_mod_savepoint(true, 2024090401, 'attendance');
+}
 ```
 
 ## locallib.php
