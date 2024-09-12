@@ -54,6 +54,25 @@ if ($oldversion < 2023061401) {
 
     upgrade_mod_savepoint(true, 2023061401, 'attendance');
 }
+
+if ($oldversion < 2024090402) {
+    $table = new xmldb_table('attendance_sessions');
+    $field = new xmldb_field('sessioninstancecode', XMLDB_TYPE_CHAR, '62', null, null, null, null, 'timetableeventid');
+    if ($dbman->field_exists($table, $field)) {
+        $dbman->change_field_precision($table, $field);
+        $dbman->change_field_notnull($table, $field);
+    }
+    $field = new xmldb_field('roomid', XMLDB_TYPE_CHAR, '1023', null, null, null, null, 'automarkcmid');
+    if ($dbman->field_exists($table, $field)) {
+        $dbman->change_field_notnull($table, $field);
+    }
+    $field = new xmldb_field('timetableeventid', XMLDB_TYPE_CHAR, '20', null, null, null, null, 'roomid');
+    if ($dbman->field_exists($table, $field)) {
+        $dbman->change_field_notnull($table, $field);
+    }
+
+    upgrade_mod_savepoint(true, 2024090402, 'attendance');
+}
 ```
 
 ## locallib.php
