@@ -1472,21 +1472,37 @@ function attendance_return_passwords($session) {
  * @param string $session_id
  * @param object $user
  */
-function attendance_get_session_by_encoding($session_id, $user) {
-    if(strlen($session_id) == 0 || !$user) {
+function attendance_get_session_by_encoding($session_id, $user)
+{
+    if (strlen($session_id) == 0 || !$user) {
         return null;
     }
 
     global $DB;
 
-    $attforsessions = $DB->get_records('attendance_sessions', array('rotateqrcodesecret' => $session_id), null);
+    $attforsessions = $DB->get_records('attendance_sessions', array('sessioninstancecode' => $session_id), null);
 
-    if(!$attforsessions) {
+    if (!$attforsessions) {
         return $DB->get_record('attendance_sessions', array('id' => $session_id), '*', MUST_EXIST);
     }
 
-    if(count($attforsessions) == 1) {
+    if (count($attforsessions) == 1) {
         return reset($attforsessions);
+    }
+
+    $params = array();
+    $params['userid'] = $user->id;
+    $params['endcoding'] = $session_id;
+
+    $sql = "SELECT s.*
+            FROM {attendance_sessions} s 
+            INNER JOIN {groups_members} m ON m.groupid = s.groupid
+            WHERE s.groupid > 0 AND m.userid = :userid AND s.sessioninstancecode = :endcoding";
+
+    $attforsessionsfiltered = $DB->get_records_sql($sql, $params);
+
+    if (count($attforsessionsfiltered) > 0) {
+        return reset($attforsessionsfiltered);
     }
 
     $sql = "SELECT s.*
@@ -1495,18 +1511,14 @@ function attendance_get_session_by_encoding($session_id, $user) {
             INNER JOIN {course} c ON c.id = a.course
             INNER JOIN {enrol} e ON e.courseid = c.id
             INNER JOIN {user_enrolments} ue ON ue.enrolid = e.id
-            WHERE s.groupid = 0 AND ue.userid = :userid AND s.rotateqrcodesecret = :endcoding
-            UNION
-            SELECT s.*
-            FROM {attendance_sessions} s 
-            INNER JOIN {groups_members} m ON m.groupid = s.groupid
-            WHERE s.groupid > 0 AND m.userid = :userid AND s.rotateqrcodesecret = :endcoding";
+            WHERE ue.userid = :userid AND s.sessioninstancecode = :endcoding";
 
-    $params = array();
-    $params['userid'] = $user->id;
-    $params['endcoding'] = $session_id;
+    $attforsessionsfiltered = $DB->get_records_sql($sql, $params);
 
-    $attforsessions = $DB->get_records_sql($sql, $params);
-    return reset($attforsessions);
-
+    if (count($attforsessionsfiltered) > 0) {
+        return reset($attforsessionsfiltered);
+    }
+    else {
+        return reset($attforsessions);
+    }
 }
