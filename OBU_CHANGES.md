@@ -6,73 +6,9 @@ Oxford Brookes University | Fork Changes
 ```xml
 <TABLE NAME="attendance_sessions" COMMENT="attendance_sessions table">
 ...
-<FIELD NAME="roomid" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Identifier for the room hosting the session"/>
+<FIELD NAME="roomid" TYPE="char" LENGTH="1023" NOTNULL="false" SEQUENCE="false" COMMENT="Identifier for the room hosting the session"/>
 <FIELD NAME="timetableeventid" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Timetabling session identifier"/>
 <FIELD NAME="sessioninstancecode" TYPE="char" LENGTH="62" NOTNULL="false" SEQUENCE="false" COMMENT="Encoded session instance"/>
-```
-
-### upgrade.php
-```php
-if ($oldversion < 2023020108) {
-    $table = new xmldb_table('attendance_sessions');
-
-    $field = new xmldb_field('roomid', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, '', 'automarkcmid');
-    if (!$dbman->field_exists($table, $field)) {
-        $dbman->add_field($table, $field);
-    }
-
-    $field = new xmldb_field('timetableeventid', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, '', 'roomid');
-    if (!$dbman->field_exists($table, $field)) {
-        $dbman->add_field($table, $field);
-    }
-
-    $field = new xmldb_field('sessioninstancecode', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, '', 'timetableeventid');
-    if (!$dbman->field_exists($table, $field)) {
-        $dbman->add_field($table, $field);
-    }
-
-    // Attendance savepoint reached.
-    upgrade_mod_savepoint(true, 2023020108, 'attendance');
-}
-
-if ($oldversion < 2023020111) {
-    $table = new xmldb_table('attendance_sessions');
-    $field = new xmldb_field('roomid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '', 'automarkcmid');
-    if ($dbman->field_exists($table, $field)) {
-        $dbman->change_field_precision($table, $field);
-    }
-
-    upgrade_mod_savepoint(true, 2023020111, 'attendance');
-}
-
-if ($oldversion < 2023061401) {
-    $table = new xmldb_table('attendance_sessions');
-    $field = new xmldb_field('roomid', XMLDB_TYPE_CHAR, '1023', null, XMLDB_NOTNULL, null, '', 'automarkcmid');
-    if ($dbman->field_exists($table, $field)) {
-        $dbman->change_field_precision($table, $field);
-    }
-
-    upgrade_mod_savepoint(true, 2023061401, 'attendance');
-}
-
-if ($oldversion < 2024090402) {
-    $table = new xmldb_table('attendance_sessions');
-    $field = new xmldb_field('sessioninstancecode', XMLDB_TYPE_CHAR, '62', null, null, null, null, 'timetableeventid');
-    if ($dbman->field_exists($table, $field)) {
-        $dbman->change_field_precision($table, $field);
-        $dbman->change_field_notnull($table, $field);
-    }
-    $field = new xmldb_field('roomid', XMLDB_TYPE_CHAR, '1023', null, null, null, null, 'automarkcmid');
-    if ($dbman->field_exists($table, $field)) {
-        $dbman->change_field_notnull($table, $field);
-    }
-    $field = new xmldb_field('timetableeventid', XMLDB_TYPE_CHAR, '20', null, null, null, null, 'roomid');
-    if ($dbman->field_exists($table, $field)) {
-        $dbman->change_field_notnull($table, $field);
-    }
-
-    upgrade_mod_savepoint(true, 2024090402, 'attendance');
-}
 ```
 
 ## locallib.php
@@ -81,8 +17,9 @@ if ($oldversion < 2024090402) {
 Include variable session id and overwrite the session ID URL parameter with the rotate QR code secret if present but not used
 
 ``` php
-$hasencode = !$session->rotateqrcode && strlen($session->rotateqrcodesecret) > 0;
-    $sessionid = $hasencode ? $session->rotateqrcodesecret : $session->id;
+    $sessionid = strlen($session->sessioninstancecode) > 0
+        ? $session->sessioninstancecode
+        : $session->id;
 
     if (strlen($session->studentpassword) > 0) {
         $qrcodeurl = $CFG->wwwroot . '/mod/attendance/attendance.php?qrpass=' .
@@ -103,21 +40,37 @@ $hasencode = !$session->rotateqrcode && strlen($session->rotateqrcodesecret) > 0
  * @param string $session_id
  * @param object $user
  */
-function attendance_get_session_by_encoding($session_id, $user) {
-    if(strlen($session_id) == 0 || !$user) {
+function attendance_get_session_by_encoding($session_id, $user)
+{
+    if (strlen($session_id) == 0 || !$user) {
         return null;
     }
 
     global $DB;
 
-    $attforsessions = $DB->get_records('attendance_sessions', array('rotateqrcodesecret' => $session_id), null);
+    $attforsessions = $DB->get_records('attendance_sessions', array('sessioninstancecode' => $session_id), null);
 
-    if(!$attforsessions) {
+    if (!$attforsessions) {
         return $DB->get_record('attendance_sessions', array('id' => $session_id), '*', MUST_EXIST);
     }
 
-    if(count($attforsessions) == 1) {
+    if (count($attforsessions) == 1) {
         return reset($attforsessions);
+    }
+
+    $params = array();
+    $params['userid'] = $user->id;
+    $params['endcoding'] = $session_id;
+
+    $sql = "SELECT s.*
+            FROM {attendance_sessions} s 
+            INNER JOIN {groups_members} m ON m.groupid = s.groupid
+            WHERE s.groupid > 0 AND m.userid = :userid AND s.sessioninstancecode = :endcoding";
+
+    $attforsessionsfiltered = $DB->get_records_sql($sql, $params);
+
+    if (count($attforsessionsfiltered) > 0) {
+        return reset($attforsessionsfiltered);
     }
 
     $sql = "SELECT s.*
@@ -126,25 +79,21 @@ function attendance_get_session_by_encoding($session_id, $user) {
             INNER JOIN {course} c ON c.id = a.course
             INNER JOIN {enrol} e ON e.courseid = c.id
             INNER JOIN {user_enrolments} ue ON ue.enrolid = e.id
-            WHERE s.groupid = 0 AND ue.userid = :userid AND s.rotateqrcodesecret = :endcoding
-            UNION
-            SELECT s.*
-            FROM {attendance_sessions} s 
-            INNER JOIN {groups_members} m ON m.groupid = s.groupid
-            WHERE s.groupid > 0 AND m.userid = :userid AND s.rotateqrcodesecret = :endcoding";
+            WHERE ue.userid = :userid AND s.sessioninstancecode = :endcoding";
 
-    $params = array();
-    $params['userid'] = $user->id;
-    $params['endcoding'] = $session_id;
+    $attforsessionsfiltered = $DB->get_records_sql($sql, $params);
 
-    $attforsessions = $DB->get_records_sql($sql, $params);
-    return reset($attforsessions);
-
+    if (count($attforsessionsfiltered) > 0) {
+        return reset($attforsessionsfiltered);
+    }
+    else {
+        return reset($attforsessions);
+    }
 }
 ```
 
 ## attendance.php
-### main (line: ~32)
+### Line: ~32
 
 Update parameter type to text
 
@@ -161,6 +110,24 @@ if (empty($attforsession)) {
 
 $id = $attforsession->id;
 ```
+### Line: ~49
+Require user is logged in but not required to be enrolled on course or in group
+``` php
+//require_login($course, true, $cm);
+require_login();
+
+// If group mode is set, check if user can access this session.
+//if (!empty($attforsession->groupid) && !groups_is_member($attforsession->groupid, $USER->id)) {
+//    throw new moodle_exception('cannottakethisgroup', 'attendance');
+//}
+```
+### Line: ~231
+Alter the redirect location to Moodle home in case a student is not enrolled on the course
+``` php
+// $url = new moodle_url('/mod/attendance/view.php', ['id' => $cm->id]);
+$url = new moodle_url('/');
+```
+
 
 ## classes/output/renderer.php
 ### construct_date_time_actions (line ~448)

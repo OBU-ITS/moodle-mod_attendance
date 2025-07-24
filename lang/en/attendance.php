@@ -443,8 +443,8 @@ $string['processingfile'] = 'Processing file';
 $string['qr_cookie_error'] = 'QR session has expired.';
 $string['qr_pass_wrong'] = 'The QR code has expired, please scan the QR code again.';
 $string['qrcode'] = 'QR code';
-$string['qrcodeandpasswordheader'] = 'Scan the QR code below or use the password listed below to take your attendance';
-$string['qrcodeheader'] = 'Scan the QR code below to take your attendance';
+$string['qrcodeandpasswordheader'] = 'Scan the QR code or use the password listed below to take your attendance';
+$string['qrcodeheader'] = 'Scan the QR code to take your attendance';
 $string['qrcodevalidafter'] = 'seconds';
 $string['qrcodevalidbefore'] = 'QR code valid for:';
 $string['randompassword'] = 'Random password';
@@ -682,3 +682,6 @@ $string['weekcommencing'] = 'Week commencing';
 $string['weeks'] = 'Weeks';
 $string['youcantdo'] = 'You can\'t do anything';
 $string['nousers'] = 'No enrolled users found to take attendance for.';
+
+/* OBU Additional Lang */
+$string['nomatchingsessions'] = 'No attendance sessions have been found for you.';

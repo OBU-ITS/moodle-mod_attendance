@@ -29,22 +29,30 @@ require_once($CFG->libdir.'/formslib.php');
 $pageparams = new mod_attendance_sessions_page_params();
 
 // Check that the required parameters are present.
-$id = required_param('sessid', PARAM_INT);
+$sessid = required_param('sessid', PARAM_TEXT);
 $qrpass = optional_param('qrpass', '', PARAM_TEXT);
 
-$attforsession = $DB->get_record('attendance_sessions', ['id' => $id], '*', MUST_EXIST);
+$attforsession = attendance_get_session_by_encoding($sessid, $USER);
+if (empty($attforsession)) {
+    throw new moodle_exception('nomatchingsessions', 'attendance');
+}
+
+$id = $attforsession->id;
+
+//$attforsession = $DB->get_record('attendance_sessions', ['id' => $id], '*', MUST_EXIST);
 $attconfig = get_config('attendance');
 $attendance = $DB->get_record('attendance', ['id' => $attforsession->attendanceid], '*', MUST_EXIST);
 $cm = get_coursemodule_from_instance('attendance', $attendance->id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 
 // Require the user is logged in.
-require_login($course, true, $cm);
+//require_login($course, true, $cm);
+require_login();
 
 // If group mode is set, check if user can access this session.
-if (!empty($attforsession->groupid) && !groups_is_member($attforsession->groupid, $USER->id)) {
-    throw new moodle_exception('cannottakethisgroup', 'attendance');
-}
+//if (!empty($attforsession->groupid) && !groups_is_member($attforsession->groupid, $USER->id)) {
+//    throw new moodle_exception('cannottakethisgroup', 'attendance');
+//}
 
 if ($DB->record_exists('attendance_log', ['sessionid' => $id, 'studentid' => $USER->id]) && !attendance_check_allow_update($id)) {
     $url = new moodle_url('/mod/attendance/view.php', ['id' => $cm->id]);
@@ -220,7 +228,7 @@ if ($mform->is_cancelled()) {
         }
         $success = $att->take_from_student($fromform);
 
-        $url = new moodle_url('/mod/attendance/view.php', ['id' => $cm->id]);
+        $url = new moodle_url('/'); //new moodle_url('/mod/attendance/view.php', ['id' => $cm->id]);
         if ($success) {
             // Redirect back to the view page.
             redirect($url, get_string('studentmarked', 'attendance'));
