@@ -23,9 +23,10 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2024091901;
-$plugin->release   = 'v2.0.2';
-$plugin->requires  = 2022090200; // Requires 4.1.
+$plugin->version  = 2024072401;
+$plugin->release = 2024072401;
+$plugin->requires = 2024092700; // Requires 4.5.
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->cron      = 0;
+$plugin->cron     = 0;
 $plugin->component = 'mod_attendance';
+$plugin->supported = [405, 405];
