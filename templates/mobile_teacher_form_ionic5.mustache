@@ -46,17 +46,9 @@
 }}
 {{=<% %>=}}
 <div class="attendance_mobile_teacher_form">
-    <%#attendance.intro%>
     <span class="description">
-        <ion-card>
-            <ion-item class="ion-text-wrap">
-                <ion-label>
-                    <core-format-text text="<%attendance.intro%>" component="mod_attendance" componentId="<%cmid%>" collapsible-item />
-                </ion-label>
-            </ion-item>
-        </ion-card>
+    <core-course-module-description description="<% attendance.intro %>" component="mod_attendance" componentId="<% cmid %>"></core-course-module-description>
     </span>
-    <%/attendance.intro%>
     <%#showmessage%>
         <%#messages%>
             <span class="messages">
@@ -76,7 +68,8 @@
 
                 <span class="radiolabel">
                     <ion-item class="ion-text-wrap">
-                        <ion-radio value="<% stid %>"><% acronym %></ion-radio>
+                        <ion-label><% acronym %></ion-label>
+                        <ion-radio value="<% stid %>"></ion-radio>
                     </ion-item>
                 </span>
             <%/statuses%>
@@ -95,21 +88,21 @@
         </ion-item>
         <ion-radio-group [(ngModel)]="CONTENT_OTHERDATA.status<% userid %>">
             <%#statuses%>
-            <span class="radiolabel">
+                <span class="radiolabel">
                 <ion-item class="ion-text-wrap">
-                    <ion-radio value="<% stid %>"><% acronym %></ion-radio>
+                    <ion-label><% acronym %></ion-label>
+                    <ion-radio value="<% stid %>"></ion-radio>
                 </ion-item>
             </span>
             <%/statuses%>
         </ion-radio-group>
         </span>
         <%/users%>
-        <ion-button class="ion-margin" expand="block" core-site-plugins-new-content component="mod_attendance" method="mobile_view_activity" [args]="{cmid: <% cmid %>, courseid: <% courseid %>, sessid: <% sessid %><% btnargs %>}"  [preSets]="{getFromCache: 0, saveToCache: 0}" refreshOnSuccess="true" samePage="true">
+        <ion-button class="ion-margin" expand="block" core-site-plugins-new-content component="mod_attendance" method="mobile_view_activity" [args]="{cmid: <% cmid %>, courseid: <% courseid %>, sessid: <% sessid %><% btnargs %>}">
             {{ 'plugin.mod_attendance.submitattendance' | translate }}
         </ion-button>
     <%/users.0%>
     <%^users.0%>
         <span>{{ 'plugin.mod_attendance.nousers' | translate }}</span>
     <%/users.0%>
-
 </div>

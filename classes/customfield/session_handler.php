@@ -52,7 +52,7 @@ class session_handler extends \core_customfield\handler {
      * @param int $itemid
      * @return session_handler
      */
-    public static function create(int $itemid = 0) : \core_customfield\handler {
+    public static function create(int $itemid = 0): \core_customfield\handler {
         if (static::$singleton === null) {
             self::$singleton = new static(0);
         }
@@ -75,7 +75,7 @@ class session_handler extends \core_customfield\handler {
      *
      * @return bool true if the current can configure custom fields, false otherwise
      */
-    public function can_configure() : bool {
+    public function can_configure(): bool {
         return has_capability('moodle/course:configurecustomfields', $this->get_configuration_context());
     }
 
@@ -86,13 +86,14 @@ class session_handler extends \core_customfield\handler {
      * @param int $instanceid id of the course to test edit permission
      * @return bool true if the current can edit custom fields, false otherwise
      */
-    public function can_edit(field_controller $field, int $instanceid = 0) : bool {
+    public function can_edit(field_controller $field, int $instanceid = 0): bool {
+        global $PAGE;
         if ($instanceid) {
             $context = $this->get_instance_context($instanceid);
             return (!$field->get_configdata_property('locked') ||
                     has_capability('moodle/course:changelockedcustomfields', $context));
         } else {
-            $context = \context_system::instance();
+            $context = $PAGE->context->get_course_context();
             return (!$field->get_configdata_property('locked') ||
                 guess_if_creator_will_have_course_capability('moodle/course:changelockedcustomfields', $context));
         }
@@ -105,7 +106,7 @@ class session_handler extends \core_customfield\handler {
      * @param int $instanceid id of the course to test edit permission
      * @return bool true if the current can edit custom fields, false otherwise
      */
-    public function can_view(field_controller $field, int $instanceid) : bool {
+    public function can_view(field_controller $field, int $instanceid): bool {
         $visibility = $field->get_configdata_property('visibility');
         if ($visibility == self::NOTVISIBLE) {
             return false;
@@ -121,7 +122,7 @@ class session_handler extends \core_customfield\handler {
      *
      * @return \context the context for configuration
      */
-    public function get_configuration_context() : \context {
+    public function get_configuration_context(): \context {
         return \context_system::instance();
     }
 
@@ -130,7 +131,7 @@ class session_handler extends \core_customfield\handler {
      *
      * @return \moodle_url The URL to configure custom fields for this component
      */
-    public function get_configuration_url() : \moodle_url {
+    public function get_configuration_url(): \moodle_url {
         return new \moodle_url('/mod/attendance/customfield.php');
     }
 
@@ -140,7 +141,7 @@ class session_handler extends \core_customfield\handler {
      * @param int $instanceid id of the record to get the context for
      * @return \context the context for the given record
      */
-    public function get_instance_context(int $instanceid = 0) : \context {
+    public function get_instance_context(int $instanceid = 0): \context {
         global $DB;
         if ($instanceid > 0) {
             $attendanceid = $DB->get_field('attendance_sessions', 'attendanceid', ['id' => $instanceid]);
@@ -167,7 +168,7 @@ class session_handler extends \core_customfield\handler {
         // Field data visibility.
         $visibilityoptions = [self::VISIBLETOALL => get_string('customfield_visibletoall', 'core_course'),
             self::VISIBLETOTEACHERS => get_string('customfield_visibletoteachers', 'core_course'),
-            self::NOTVISIBLE => get_string('customfield_notvisible', 'core_course')];
+            self::NOTVISIBLE => get_string('customfield_notvisible', 'core_course'), ];
         $mform->addElement('select', 'configdata[visibility]', get_string('customfield_visibility', 'core_course'),
             $visibilityoptions);
         $mform->addHelpButton('configdata[visibility]', 'customfield_visibility', 'core_course');
@@ -226,7 +227,7 @@ class session_handler extends \core_customfield\handler {
      * @param int $activityid
      * @return array
      */
-    public function get_instance_data_for_backup_by_activity(int $activityid) : array {
+    public function get_instance_data_for_backup_by_activity(int $activityid): array {
         global $DB;
         $finalfields = [];
         $sessions = $DB->get_records('attendance_sessions', ['attendanceid' => $activityid]);
@@ -243,7 +244,7 @@ class session_handler extends \core_customfield\handler {
                         'shortname' => $d->get_field()->get('shortname'),
                         'type' => $d->get_field()->get('type'),
                         'value' => $d->get_value(),
-                        'valueformat' => $d->get('valueformat')];
+                        'valueformat' => $d->get('valueformat'), ];
                 }
             }
         }

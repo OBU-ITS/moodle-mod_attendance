@@ -1,29 +1,28 @@
-# README #
+# ABOUT
 
-This README would normally document whatever steps are necessary to get your application up and running.
+The Attendance module is supported and maintained by Dan Marsden http://danmarsden.com
 
-### What is this repository for? ###
+The Attendance module was previously developed by
+    Dmitry Pupinin, Novosibirsk, Russia,
+    Artem Andreev, Taganrog, Russia.
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+Branches
+--------
+The following git branches are supported:
 
-### How do I get set up? ###
+| Moodle version        | Branch            |
+|-----------------------|-------------------|
+| Moodle 4.1            | MOODLE_401_STABLE |
+| Moodle 4.2            | MOODLE_402_STABLE |
+| Moodle 4.3            | MOODLE_403_STABLE |
+| Moodle 4.4            | MOODLE_404_STABLE |
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+# PURPOSE
+The Attendance module allows teachers to maintain a record of attendance, replacing or supplementing a paper-based attendance register.
+It is primarily used in blended-learning environments where students are required to attend classes, lectures and tutorials and allows
+the teacher to track and optionally provide a grade for the students attendance.
 
-### Contribution guidelines ###
+Sessions can be configured to allow students to record their own attendance and a range of different reports are available.
 
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+# DOCUMENTATION
+https://docs.moodle.org/en/Attendance_activity
